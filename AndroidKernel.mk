@@ -43,12 +43,7 @@ ifeq ($(KERNEL_HEADER_DEFCONFIG),)
 KERNEL_HEADER_DEFCONFIG := $(KERNEL_DEFCONFIG)
 endif
 
-# Force 32-bit binder IPC for 64bit kernel with 32bit userspace
-ifeq ($(KERNEL_ARCH),arm64)
-ifeq ($(TARGET_ARCH),arm)
-KERNEL_CONFIG_OVERRIDE := CONFIG_ANDROID_BINDER_IPC_32BIT=y
-endif
-endif
+# Keep 64-bit binder IPC even with 32-bit userspace (TARGET_USES_64_BIT_BINDER := true)
 
 TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(strip $(TARGET_KERNEL_CROSS_COMPILE_PREFIX))
 ifeq ($(TARGET_KERNEL_CROSS_COMPILE_PREFIX),)
