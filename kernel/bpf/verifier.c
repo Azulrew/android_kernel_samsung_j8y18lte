@@ -17,6 +17,7 @@
 #include <net/netlink.h>
 #include <linux/file.h>
 #include <linux/vmalloc.h>
+#include <linux/capability.h>
 
 /* bpf_check() is a static code analyzer that walks eBPF program
  * instruction by instruction and updates register/stack state.
@@ -202,6 +203,7 @@ struct verifier_env {
 	struct verifier_state_list **explored_states; /* search pruning optimization */
 	struct bpf_map *used_maps[MAX_USED_MAPS]; /* array of map's used by eBPF program */
 	u32 used_map_cnt;		/* number of used maps */
+	bool allow_ptr_leaks;
 };
 
 /* verbose verifier prints what it's seeing
@@ -315,7 +317,7 @@ static const char *const bpf_jmp_string[] = {
 	[BPF_EXIT >> 4] = "exit",
 };
 
-static void print_bpf_insn(const struct bpf_verifier_env *env,
+static void print_bpf_insn(const struct verifier_env *env,
 			   const struct bpf_insn *insn)
 {
 	u8 class = BPF_CLASS(insn->code);
@@ -1852,6 +1854,7 @@ int bpf_check(struct bpf_prog *prog, union bpf_attr *attr)
 		return -ENOMEM;
 
 	env->prog = prog;
+	env->allow_ptr_leaks = capable(CAP_SYS_ADMIN);
 
 	/* grab the mutex to protect few globals used by verifier */
 	mutex_lock(&bpf_verifier_lock);
